@@ -82,17 +82,23 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        # GitHub CLI automatically uses $GITHUB_TOKEN, no need to login
-                        gh pr create --base master --head devbranch \
+                        # Create PR and capture its URL
+                        PR_URL=$(gh pr create --base master --head devbranch \
                           --title "Auto PR: Merge devbranch to master" \
-                          --body "Pipeline succeeded on devbranch. Requesting merge to master."
+                          --body "Pipeline succeeded on devbranch. Requesting merge to master.")
 
-                        gh pr merge --auto --merge
+                        echo "Created PR: $PR_URL"
+
+                        # Extract PR number from URL
+                        PR_NUMBER=$(echo $PR_URL | awk -F/ '{print $NF}')
+
+                        # Merge the PR explicitly by number
+                        gh pr merge $PR_NUMBER --auto --merge
                     '''
                 }
             }
         }
-    }   // <-- this was missing
+    }
 
     post {
         success {
