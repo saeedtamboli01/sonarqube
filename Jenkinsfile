@@ -1,8 +1,8 @@
 pipeline {
     agent none
 
-    environment {
-        SONARQUBE = credentials('sonar-token')
+    tools {
+        sonarQubeScanner 'SonarScanner'   // must match Global Tool Configuration
     }
 
     stages {
@@ -19,15 +19,14 @@ pipeline {
             agent { label 'built-in' }
             steps {
                 unstash 'source-code'
-
-                withSonarQubeEnv('sonarqube-server') {
-                    sh """
-                    sonar-scanner \
-                        -Dsonar.projectKey=django-sample \
-                        -Dsonar.sources=. \
-                        -Dsonar.python.version=3.14 \
-                        -Dsonar.sourceEncoding=UTF-8
-                    """
+                withSonarQubeEnv('sonarqube-server') {   // must match Configure System
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=django-sample \
+                          -Dsonar.sources=. \
+                          -Dsonar.python.version=3.14 \
+                          -Dsonar.sourceEncoding=UTF-8
+                    '''
                 }
             }
         }
@@ -45,11 +44,9 @@ pipeline {
             agent { label 'pynode' }
             steps {
                 unstash 'source-code'
-
-                sh """
-                # Pylint already installed globally in container
-                pylint --rcfile=.pylintrc greet/ sample/ > pylint-report.txt || true
-                """
+                sh '''
+                    pylint --rcfile=.pylintrc greet/ sample/ > pylint-report.txt || true
+                '''
             }
             post {
                 always {
@@ -65,11 +62,9 @@ pipeline {
             agent { label 'pynode' }
             steps {
                 unstash 'source-code'
-
-                sh """
-                # Pytest installed globally in container
-                pytest --junitxml=pytest-results.xml
-                """
+                sh '''
+                    pytest --junitxml=pytest-results.xml
+                '''
             }
             post {
                 always {
@@ -77,15 +72,14 @@ pipeline {
                 }
             }
         }
-
     }
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully!"
         }
         failure {
-            echo "Pipeline failed!"
+            echo "❌ Pipeline failed!"
         }
     }
 }
