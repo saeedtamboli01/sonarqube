@@ -1,10 +1,6 @@
 pipeline {
     agent none
 
-    tools {
-        sonarQubeScanner 'SonarScanner'   // must match Global Tool Configuration
-    }
-
     stages {
 
         stage('Checkout Code') {
@@ -19,9 +15,9 @@ pipeline {
             agent { label 'built-in' }
             steps {
                 unstash 'source-code'
-                withSonarQubeEnv('sonarqube-server') {   // must match Configure System
+                withSonarQubeEnv('sonarqube-server') {
                     sh '''
-                        sonar-scanner \
+                        /opt/sonar-scanner/bin/sonar-scanner \
                           -Dsonar.projectKey=django-sample \
                           -Dsonar.sources=. \
                           -Dsonar.python.version=3.14 \
