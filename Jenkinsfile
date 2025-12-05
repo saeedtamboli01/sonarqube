@@ -84,15 +84,15 @@ pipeline {
                     sh '''
                         # GitHub CLI automatically uses $GITHUB_TOKEN, no need to login
                         gh pr create --base master --head devbranch \
-                        --title "Auto PR: Merge devbranch to master" \
-                        --body "Pipeline succeeded on devbranch. Requesting merge to master."
+                          --title "Auto PR: Merge devbranch to master" \
+                          --body "Pipeline succeeded on devbranch. Requesting merge to master."
 
                         gh pr merge --auto --merge
                     '''
                 }
             }
         }
-
+    }   // <-- this was missing
 
     post {
         success {
