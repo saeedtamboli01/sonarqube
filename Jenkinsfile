@@ -1,6 +1,11 @@
 pipeline {
     agent none
 
+    options {
+        // Prevent Jenkins from doing an implicit checkout on every agent
+        skipDefaultCheckout(true)
+    }
+
     stages {
 
         stage('Checkout Code') {
