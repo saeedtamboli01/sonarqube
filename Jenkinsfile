@@ -53,8 +53,9 @@ pipeline {
                 always {
                     recordIssues(
                         enabledForFailure: true,
-                        tool: pylint(pattern: 'pylint-report.txt')
+                        tools: [pyLint(pattern: 'pylint-report.txt')]
                     )
+
                 }
             }
         }
