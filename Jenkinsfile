@@ -84,14 +84,14 @@ pipeline {
                     sh '''
                         echo $GITHUB_TOKEN | gh auth login --with-token
                         gh pr create --base master --head devbranch \
-                        --title "Auto PR: Merge devbranch to master" \
-                        --body "Pipeline succeeded on devbranch. Requesting merge to master."
+                          --title "Auto PR: Merge devbranch to master" \
+                          --body "Pipeline succeeded on devbranch. Requesting merge to master."
                         gh pr merge --auto --merge
                     '''
                 }
             }
         }
-
+    }  // <-- this was missing
 
     post {
         success {
