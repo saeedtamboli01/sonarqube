@@ -8,7 +8,7 @@ pipeline {
     stages {
 
         stage('Checkout Code') {
-            agent { label 'built-in' }   // <-- your Jenkins master node
+            agent { label 'built-in' }
             steps {
                 checkout scm
                 stash includes: '**', name: 'source-code'
@@ -16,7 +16,7 @@ pipeline {
         }
 
         stage('SonarQube Scan') {
-            agent { label 'built-in' }   // <-- SonarScanner is on master
+            agent { label 'built-in' }
             steps {
                 unstash 'source-code'
 
@@ -42,17 +42,12 @@ pipeline {
         }
 
         stage('Lint Code (PyLint)') {
-            agent { label 'pynode' }   // <-- your docker agent
+            agent { label 'pynode' }
             steps {
                 unstash 'source-code'
 
                 sh """
-                python3 -m venv venv
-                . venv/bin/activate
-
-                pip install --upgrade pip
-                pip install -r requirements.txt
-
+                # Pylint already installed globally in container
                 pylint --rcfile=.pylintrc greet/ sample/ > pylint-report.txt || true
                 """
             }
@@ -72,8 +67,7 @@ pipeline {
                 unstash 'source-code'
 
                 sh """
-                . venv/bin/activate
-
+                # Pytest installed globally in container
                 pytest --junitxml=pytest-results.xml
                 """
             }
