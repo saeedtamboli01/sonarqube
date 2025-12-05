@@ -18,7 +18,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube-server') {
                     sh '''
                         /opt/sonar-scanner/bin/sonar-scanner \
-                          -Dsonar.projectKey=django-sample \
+                          -Dsonar.projectKey=django-sample-dev \
                           -Dsonar.sources=. \
                           -Dsonar.python.version=3.14 \
                           -Dsonar.sourceEncoding=UTF-8
