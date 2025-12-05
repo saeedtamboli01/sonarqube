@@ -76,6 +76,30 @@ pipeline {
                 }
             }
         }
+
+        stage('Raise PR to Master') {
+            agent { label 'built-in' }
+            when {
+                branch 'devbranch'
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        echo $GITHUB_TOKEN | gh auth login --with-token
+
+                        # Create PR from devbranch to master
+                        gh pr create \
+                          --base master \
+                          --head devbranch \
+                          --title "Auto PR: Merge devbranch to master" \
+                          --body "Pipeline succeeded on devbranch. Requesting merge to master."
+
+                        # Auto-merge the PR if checks pass
+                        gh pr merge --auto --merge
+                    '''
+                }
+            }
+        }
     }
 
     post {
