@@ -1,6 +1,11 @@
 pipeline {
     agent none
 
+    options {
+        // Prevent Jenkins from doing an implicit checkout on every agent
+        skipDefaultCheckout(true)
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -18,7 +23,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube-server') {
                     sh '''
                         /opt/sonar-scanner/bin/sonar-scanner \
-                          -Dsonar.projectKey=django-sample \
+                          -Dsonar.projectKey=django-sample-dev \
                           -Dsonar.sources=. \
                           -Dsonar.python.version=3.14 \
                           -Dsonar.sourceEncoding=UTF-8
@@ -68,6 +73,28 @@ pipeline {
             post {
                 always {
                     junit 'pytest-results.xml'
+                }
+            }
+        }
+
+        stage('Raise PR to Master') {
+            agent { label 'built-in' }
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        # Create PR and capture its URL
+                        PR_URL=$(gh pr create --base master --head devbranch \
+                          --title "Auto PR: Merge devbranch to master" \
+                          --body "Pipeline succeeded on devbranch. Requesting merge to master.")
+
+                        echo "Created PR: $PR_URL"
+
+                        # Extract PR number from URL
+                        PR_NUMBER=$(echo $PR_URL | awk -F/ '{print $NF}')
+
+                        # Merge the PR explicitly by number
+                        gh pr merge $PR_NUMBER --auto --merge
+                    '''
                 }
             }
         }
