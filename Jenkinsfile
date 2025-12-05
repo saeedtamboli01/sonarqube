@@ -30,22 +30,19 @@ pipeline {
         stage("Wait for Quality Gate") {
             agent { label 'built-in' }
             steps {
-                // ⏳ Give SonarQube a few seconds to start processing
                 sleep(time: 15, unit: 'SECONDS')
-
-                // ✅ Enforce the 2-minute limit
                 timeout(time: 2, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-
         stage('Lint Code (PyLint)') {
             agent { label 'pynode' }
             steps {
                 unstash 'source-code'
                 sh '''
+                    pip install -r requirements.txt
                     pylint --rcfile=.pylintrc greet/ sample/ > pylint-report.txt || true
                 '''
             }
@@ -55,7 +52,6 @@ pipeline {
                         enabledForFailure: true,
                         tools: [pyLint(pattern: 'pylint-report.txt')]
                     )
-
                 }
             }
         }
@@ -65,6 +61,7 @@ pipeline {
             steps {
                 unstash 'source-code'
                 sh '''
+                    pip install -r requirements.txt
                     pytest --junitxml=pytest-results.xml
                 '''
             }
