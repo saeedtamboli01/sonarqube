@@ -20,7 +20,7 @@ pipeline {
             agent { label 'built-in' }
             steps {
                 unstash 'source-code'
-                withSonarQubeEnv('sonarqube-server') {
+                withSonarQubeEnv('sonarqube') {
                     sh '''
                         /opt/sonar-scanner/bin/sonar-scanner \
                           -Dsonar.projectKey=django-sample-dev \
