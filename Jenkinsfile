@@ -77,15 +77,15 @@ pipeline {
             }
         }
 
-        stage('Raise PR to Master') {
+        stage('Raise PR to dev-saeed') {
             agent { label 'built-in' }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         # Create PR and capture its URL
-                        PR_URL=$(gh pr create --base master --head devbranch \
-                          --title "Auto PR: Merge devbranch to master" \
-                          --body "Pipeline succeeded on devbranch. Requesting merge to master.")
+                        PR_URL=$(gh pr create --base main --head dev-saeed \
+                          --title "Auto PR: Merge dev-saeed to main" \
+                          --body "Pipeline succeeded on dev-saeed. Requesting merge to main.")
 
                         echo "Created PR: $PR_URL"
 
