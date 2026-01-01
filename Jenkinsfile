@@ -102,7 +102,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "✅  Your Pipeline is completed successfully!"
         }
         failure {
             echo "❌ Pipeline failed!"
