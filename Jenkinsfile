@@ -2,7 +2,6 @@ pipeline {
     agent none
 
     options {
-        // Prevent Jenkins from doing an implicit checkout on every agent
         skipDefaultCheckout(true)
     }
 
@@ -32,10 +31,9 @@ pipeline {
             }
         }
 
-        stage("Wait for Quality Gate") {
+        stage('Wait for Quality Gate') {
             agent { label 'built-in' }
             steps {
-                sleep(time: 15, unit: 'SECONDS')
                 timeout(time: 10, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
@@ -47,17 +45,13 @@ pipeline {
             steps {
                 unstash 'source-code'
                 sh '''
-                    pip install -r requirements.txt
-                    pylint --rcfile=.pylintrc greet/ sample/ > pylint-report.txt || true
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt pylint
+
+                    pylint greet/ sample/ || true
                 '''
-            }
-            post {
-                always {
-                    recordIssues(
-                        enabledForFailure: true,
-                        tools: [pyLint(pattern: 'pylint-report.txt')]
-                    )
-                }
             }
         }
 
@@ -66,7 +60,8 @@ pipeline {
             steps {
                 unstash 'source-code'
                 sh '''
-                    pip install -r requirements.txt
+                    . venv/bin/activate
+                    pip install pytest
                     pytest --junitxml=pytest-results.xml
                 '''
             }
@@ -79,21 +74,19 @@ pipeline {
 
         stage('Raise PR to dev-saeed') {
             agent { label 'built-in' }
+            when {
+                branch 'dev-saeed'
+            }
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        # Create PR and capture its URL
-                        PR_URL=$(gh pr create --base main --head dev-saeed \
+                        export GH_TOKEN=$GITHUB_TOKEN
+
+                        gh pr create \
+                          --base main \
+                          --head dev-saeed \
                           --title "Auto PR: Merge dev-saeed to main" \
-                          --body "Pipeline succeeded on dev-saeed. Requesting merge to main.")
-
-                        echo "Created PR: $PR_URL"
-
-                        # Extract PR number from URL
-                        PR_NUMBER=$(echo $PR_URL | awk -F/ '{print $NF}')
-
-                        # Merge the PR explicitly by number
-                        gh pr merge $PR_NUMBER --auto --merge
+                          --body "Pipeline passed. Auto-generated PR."
                     '''
                 }
             }
@@ -102,10 +95,10 @@ pipeline {
 
     post {
         success {
-            echo "✅  Your Pipeline is completed successfully!"
+            echo "✅ Pipeline completed successfully"
         }
         failure {
-            echo "❌ Pipeline failed!"
+            echo "❌ Pipeline failed"
         }
     }
 }
