@@ -25,7 +25,7 @@ pipeline {
                         /opt/sonar-scanner/bin/sonar-scanner \
                           -Dsonar.projectKey=django-sample-dev \
                           -Dsonar.sources=. \
-                          -Dsonar.python.version=3.14 \
+                          -Dsonar.python.version=3.10 \
                           -Dsonar.sourceEncoding=UTF-8
                     '''
                 }
