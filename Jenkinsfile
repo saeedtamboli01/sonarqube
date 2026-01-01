@@ -32,14 +32,15 @@ pipeline {
         }
 
         stage('Wait for Quality Gate') {
-            agent { label 'built-in' }
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
+                  agent { label 'built-in' }
+                 steps {
+                         echo 'Waiting for SonarQube to process the report...'
+                        sleep(time: 45, unit: 'SECONDS')
+                     timeout(time: 15, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
         }
-
+    }
+}
         stage('Lint Code (PyLint)') {
             agent { label 'pynode' }
             steps {
