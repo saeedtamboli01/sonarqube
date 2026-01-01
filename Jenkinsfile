@@ -34,7 +34,7 @@ pipeline {
         stage('Wait for Quality Gate') {
                   agent { label 'built-in' }
                  steps {
-                         echo 'Waiting for SonarQube to process the report...'
+                         echo 'Waiting for SonarQube to process the reports...'
                         sleep(time: 45, unit: 'SECONDS')
                      timeout(time: 15, unit: 'MINUTES') {
             waitForQualityGate abortPipeline: true
