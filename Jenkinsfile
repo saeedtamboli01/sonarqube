@@ -25,22 +25,22 @@ pipeline {
                           -Dsonar.projectKey=django-sample-dev \
                           -Dsonar.sources=. \
                           -Dsonar.python.version=3.10 \
-                          -Dsonar.sourceEncoding=UTF-8
+                          -Dsonar.sourceEncoding=UTF-8 \
+                          -Dsonar.python.coverage.reportPaths=coverage.xml
                     '''
                 }
             }
         }
 
-        stage('Wait for Quality Gate') {
-                  agent { label 'built-in' }
-                 steps {
-                         echo 'Waiting for SonarQube to process the reports...'
-                        sleep(time: 45, unit: 'SECONDS')
-                     timeout(time: 15, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
+        stage('Quality Gate') {
+            agent { label 'built-in' }
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
-}
+
         stage('Lint Code (PyLint)') {
             agent { label 'pynode' }
             steps {
@@ -50,8 +50,7 @@ pipeline {
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt pylint
-
-                    pylint greet/ sample/ || true
+                    pylint greet/ sample/
                 '''
             }
         }
@@ -73,6 +72,33 @@ pipeline {
             }
         }
 
+        stage('Build Docker Image') {
+            agent { label 'built-in' }
+            steps {
+                unstash 'source-code'
+                sh '''
+                    docker build -t saeedtamboli/django-app:latest .
+                '''
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            agent { label 'built-in' }
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push saeedtamboli/django-app:latest
+                        docker logout
+                    '''
+                }
+            }
+        }
+
         stage('Raise PR to dev-saeed') {
             agent { label 'built-in' }
             when {
@@ -82,7 +108,6 @@ pipeline {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
                     sh '''
                         export GH_TOKEN=$GITHUB_TOKEN
-
                         gh pr create \
                           --base main \
                           --head dev-saeed \

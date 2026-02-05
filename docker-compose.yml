@@ -1,0 +1,9 @@
+version: "3.9"
+
+services:
+  web:
+    image: saeed126/django-app:latest
+    container_name: django_app
+    ports:
+      - "8000:8000"
+    restart: always
